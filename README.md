@@ -1,10 +1,10 @@
 # **Distributed Robust Estimation and Inference: Code and Simulations**
 
+## **Description**
+
 This repository contains the R code and simulation results for the paper titled **"Distributed Robust Estimation and Inference with Contaminated Data"**, authored by **Peiliang Zhang, Wen-Xin Zhou, and Zhao Ren**. The code implements distributed robust estimation and inference methods using Huber M-estimators and provides tools for visualizing their performance under various simulation setups.  
 
 While the implementation primarily uses the Huber loss, it also accommodates other loss functions, such as Pseudo-Huber and Smooth-Huber. For more details, refer to Appendix A of our paper. Users can define their own robust loss functions and edit the code with minimal effort.
-
----
 
 ## **Repository Structure**
 
@@ -15,29 +15,27 @@ This folder contains essential helper functions for robust distributed estimatio
 - **`Distributed_Huber`**: Implements the distributed Huber M-estimator algorithm.
 - **`Huber_GDBB_w`**: Implements a distributed multiplier bootstrap estimator using weighted Huber regression.
 
----
 
 ### **2. `distributed_estimation/`**
 This folder contains scripts for simulation studies on distributed robust estimation. These scripts evaluate the performance of the distributed Huber estimator under various configurations, comparing it with the global OLS estimator and the global Huber estimator (both assume access to the full dataset).
 
 #### **Scripts**:
-- **`distr_est_epsilon.R`**: Examines the effect of contamination proportion (\( \epsilon \)) and contamination scale (\( s \)) on distributed estimation.
-- **`distr_est_FG.R`**: Analyzes the effect of noise distributions (\( F \)) and contamination distributions (\( G \)) on robust estimation.
-- **`distr_est_n.R`**: Studies the impact of local sample size (\( n \)) on distributed estimation performance.
+- **`distr_est_epsilon.R`**: Examines the effect of contamination proportion and contamination scale on distributed estimation.
+- **`distr_est_FG.R`**: Analyzes the effect of noise distributions F and contamination distributions G on robust estimation.
+- **`distr_est_n.R`**: Studies the impact of local sample size (n) on distributed estimation performance.
 - **`distr_est_plot_generation.Rmd`**: Generates visualizations for the simulation results, such as confidence interval coverage and width.
 
 #### **Results**:
 - **`results/`**:
   - CSV files with simulation outputs for various configurations.
-  - Plots summarizing performance metrics, such as \( \ell_2 \)-estimation errors.
+  - Plots summarizing performance metrics, such as l2-estimation errors.
 
----
 
 ### **3. `distributed_inference/`**
 This folder contains scripts for distributed inference studies, focusing on constructing and visualizing distributed confidence intervals.
 
 #### **Scripts**:
-- **`distr_CI_epsilon.R`**: Explores the effect of contamination proportion (\( \epsilon \)) and contamination scale on distributed confidence intervals. It compares the following methods:
+- **`distr_CI_epsilon.R`**: Explores the effect of contamination proportion and contamination scale on distributed confidence intervals. It compares the following methods:
   1. **M-boot**: Distributed bootstrap confidence interval for distributed M-estimator.
   2. **Debias-M-boot**: Debiased distributed bootstrap confidence interval for distributed M-estimator.
   3. **M-normal**: Asymptotic normality-based confidence interval for distributed M-estimator.
@@ -48,8 +46,6 @@ This folder contains scripts for distributed inference studies, focusing on cons
 - **`results/`**:
   - CSV files with simulation results for confidence intervals.
   - Plots illustrating the coverage and width of distributed confidence intervals.
-
----
 
 ## **Usage Instructions**
 
@@ -80,8 +76,6 @@ This folder contains scripts for distributed inference studies, focusing on cons
      source("utils/functions_estimation.R")
      ```
 
----
-
 ## **Key Features**
 - **Robust Estimation**:
   - Distributed implementation of M-estimators (Huber and other robust losses), capable of handling contamination in large datasets.
@@ -91,13 +85,11 @@ This folder contains scripts for distributed inference studies, focusing on cons
   - Construct communication-efficient bootstrap confidence intervals for distributed estimators.
   - Demonstrate the necessity and benefits of de-biasing procedures under higher contamination levels.
 
----
 
 ## **Citation**
 If you use this code in your research, please cite the following manuscript:  
 Peiliang Zhang, Wen-Xin Zhou, and Zhao Ren. *Distributed Robust Estimation and Inference with Contaminated Data*, unpublished manuscript, 2025.
 
----
 
 ## **Contact**
 For questions or issues, please contact:
