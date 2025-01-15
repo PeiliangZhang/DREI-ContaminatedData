@@ -1,0 +1,197 @@
+---
+title: "Plot Generation for Distributed Robust M-Estimation"
+output: html_document
+---
+
+## Introduction
+
+This document generates visualizations for the simulation results of the distributed M-estimator (Huber) under different configurations of (1) noise distribution F and contamintion distribution G; (2) contamination proportion and scale; (3) local sample size n.
+
+```{r setup, include=FALSE}
+# Load required libraries
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+# Set global chunk options
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+
+
+
+## Part I: Effect of noise distribution F and contamintion distribution G 
+
+```{r}
+# Load the output CSV
+df <- read.csv("results/output_FG.csv")
+
+# Display the first few rows
+head(df)
+
+# Convert G to a factor with specific levels for ordered display
+df$G_factor <- factor(df$G, levels = c('X1', 'sum(X)', 'unif[-|y0|,|y0|]', 'sgn(y0)*F'))
+
+# Set F to a factor with the desired order of levels
+df$F_factor <- factor(df$F, levels = c('normal', 't', 'lognorm', 'pareto'))
+
+# Filter data for the required estimation types
+filtered_df <- df %>% 
+  filter(type %in% c('ols_global', 'Huber_global', 'Huber_distr_dc'))
+
+# Update labels for F and G to be more descriptive
+F_labels <- c(
+  'pareto' = "F = Pareto",
+  'lognorm' = "F = Log-normal",
+  't' = "F = t",
+  'normal' = "F = Normal"
+)
+G_labels <- c(
+  'X1' = "G = 10*X1",
+  'sum(X)' = "G = 10*sum(X)",
+  'unif[-|y0|,|y0|]' = "G = 10*unif[-|y0|,|y0|]",
+  'sgn(y0)*F' = "G = 10*sgn(y0)*F"
+)
+
+
+# Plot with a 4x4 grid layout
+ggplot(filtered_df, aes(x = type, y = err, fill=type)) +
+  geom_boxplot() +
+  facet_grid(F_factor ~ G_factor, labeller = labeller(F_factor = F_labels, G_factor = G_labels)) + # Custom labels for F and G
+  theme_bw() +
+  coord_cartesian(ylim = c(0, 1)) +
+  theme(
+    axis.text.x = element_text(size = 10, angle = 45, hjust = 1, face = "bold"),  # Increase size for x-axis tick labels
+    axis.text.y = element_text(size = 10),  # Increase size for y-axis tick labels
+    axis.title.x = element_text(size = 14, face = "bold"),  # Increase x-axis label font size
+    axis.title.y = element_text(size = 14, face = "bold"),  # Increase y-axis label font size
+    strip.text = element_text(size = 11, face = "bold"),  # Larger, bold subplot titles
+  ) +
+  labs(x = "Estimator Type", y = "Estimation Error") +
+  scale_x_discrete(labels = c('Distr-M', 'Global-M', 'Global-OLS')) + # Label each type
+  guides(fill = "none")  # Remove the legend
+
+# Save the plot
+ggsave(file = "results/err_FG.pdf", width = 8, height = 8, dpi = 1000)
+
+```
+
+
+
+
+## Part II: Effect of contamination proportion and scale 
+
+
+```{r}
+# Load the output CSV
+df <- read.csv("results/output_epsilon.csv")
+
+# Display the first few rows
+head(df)
+
+# Filter data for the required estimation types
+filtered_df <- df %>% 
+  filter(type %in% c('ols_global', 'Huber_global', 'Huber_distr_dc'))
+
+# Rename methods for readability
+colnames(df)[5] <- 'Methods'
+df <- df %>% 
+  mutate(Methods = str_replace(Methods, "ols_global", "Global-OLS"),
+         Methods = str_replace(Methods, "Huber_distr_dc", "Distr-M"),
+         Methods = str_replace(Methods, "Huber_global", "Global-M"))
+
+# Convert proportion to factor for proper ordering in plot
+df$proportion <- as.factor(df$proportion)
+
+scale_labels <- c(
+  '1' = "G = X1",
+  '10' = "G = 10*X1",
+  '100' = "G = 100*X1"
+)
+
+
+# Plot with boxplots for each estimator type and median lines across contamination proportions
+ggplot(df %>% filter(Methods %in% c('Global-OLS', 'Distr-M', 'Global-M')),
+       aes(x = proportion, y = err, fill = Methods)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +  # Boxplots with dodge to separate Methods
+  stat_summary(fun = median, geom = "line", aes(group = Methods, color = Methods),
+               position = position_dodge(width = 0.8)) +  # Median line for each Methods group
+  stat_summary(fun = median, geom = "point", aes(group = Methods, color = Methods), 
+               position = position_dodge(width = 0.8), size = 1.5) +  # Points on median line
+  theme_bw() +
+  facet_wrap(~scale, scales = "free", labeller = labeller(scale = scale_labels)) +  # One plot per scale
+  coord_cartesian(ylim = c(0, 10)) +
+  labs(y = "Estimation Error", x = "Contamination Proportion") +
+  theme(
+    axis.text.x = element_text(size = 12, face = "bold"),  # Increase size for x-axis tick labels
+    axis.text.y = element_text(size = 12, face = "bold"),  # Increase size for y-axis tick labels
+    axis.title.x = element_text(size = 15, face = "bold", margin = margin(t = 10)),  # Increase x-axis label font size
+    axis.title.y = element_text(size = 15, face = "bold"),  # Increase y-axis label font size
+    strip.text = element_text(size = 15, face = "bold"),  # Larger, bold subplot titles
+  ) +
+  scale_fill_discrete(name = "Estimator Type")  +
+  scale_color_discrete(name = "Estimator Type")  # Ensure colors for lines match boxplot fill colors
+
+#+  # Fill color for boxplots by estimator type
+#  scale_color_manual(values = c('blue', 'red', 'green'), name = "Methods")  # Line color for each estimator type
+
+# Save the plot
+ggsave(file = "results/err_epsilon.pdf",
+       width = 12, height = 5, dpi = 1000)
+
+```
+
+
+## Part III: Effect of local sample size n 
+
+
+```{r}
+# Load the output CSV
+df <- read.csv("results/output_n.csv")
+
+# Display the first few rows
+head(df)
+
+# Filter data for the required estimation types
+filtered_df <- df %>% 
+  filter(type %in% c('ols_global', 'Huber_global', 'Huber_distr_dc'))
+
+# Update labels for n to be more descriptive
+n_labels <- c(
+  '500' = "n=500",
+  '1000' = "n=1000",
+  '2500' = "n=2500",
+  '5000' = 'n=5000',
+  '10000' = 'n=10000'
+)
+
+# Create a plot for the estimation error
+df %>%
+  filter(type %in% c('ols_global', 'Huber_global', 'Huber_distr_dc') & n != 7500) %>%
+  mutate(type = factor(type, levels = c('Huber_distr_dc', 'Huber_global', 'ols_global'), 
+                       labels = c('Distr-M', 'Global-M', 'Global-OLS'))) %>%
+  ggplot(aes(x = type, y = err, fill = type)) +
+  geom_boxplot() +
+  facet_wrap(~n, scales = "free_y", ncol = 5, labeller = labeller(n = n_labels)) +  # Set free_y if errors vary widely with n
+  theme_bw() +
+  coord_cartesian(ylim = c(0, 0.08)) +  # Adjust y-limits as needed
+  scale_fill_discrete(name = "Methods") +
+  theme(
+    axis.text.x = element_text(size = 10, angle = 45, hjust = 1, face = "bold"),  # Increase size for x-axis tick labels, angled for clarity
+    axis.text.y = element_text(size = 10),  # Increase size for y-axis tick labels
+    axis.title.x = element_text(size = 13, face = "bold"),  # Increase x-axis label font size
+    axis.title.y = element_text(size = 13, face = "bold"),  # Increase y-axis label font size
+    strip.text = element_text(size = 11, face = "bold"),  # Larger, bold subplot titles
+    legend.position = "bottom",  # Place legend at the bottom for a cleaner look
+    legend.title = element_text(size = 12),  # Legend title size
+    legend.text = element_text(size = 10)    # Legend text size
+  ) +
+  labs(
+    y = "Estimation Error", x = "Estimator Type"
+  )+
+  guides(fill = "none")  # Remove the legend
+
+
+# Save the plot
+ggsave(file = "results/err_n.pdf", width = 9.5, height = 4, dpi = 1000)
+
+```

@@ -1,0 +1,106 @@
+---
+title: "Plot Generation for Distributed Robust Inference"
+output: html_document
+---
+
+### Introduction
+
+This document generates visualizations for the coverages and widths of distributed confidence intervals under across various configurations of contamination proportions and scales. It compares the performance of 
+
+(1) M-boot: distributed bootstrap CI for distributed M estimator
+(2) Debias-M-boot: debiased distributed bootstrap CI for distributed M estimator
+(3) M-normal: asymptotic normality based CI for distributed M estimator
+(4) OLS-normal: asymptotic normality based CI for global OLS estimator
+
+
+```{r setup, include=FALSE}
+# Load required libraries
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+# Set global chunk options
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+
+### Load Data
+
+
+```{r}
+# Load data
+df <- read.csv('results/output_CI_epsilon.csv')
+df$proportion<-round(df$proportion,4)*100
+# Coverage results
+df_freq = df%>%filter(type=='freq'|type=='freq_fix'|type=='freq_plugin'|type=='freq_ols')%>%group_by(scale,proportion,type)%>%summarise(freq=mean(results))
+df_freq
+# Width results
+df_width = df%>%filter(type=='width'|type=='width_fix'|type=='width_plugin'|type=='width_ols')%>%group_by(scale,proportion,type)%>%summarise(width=mean(results))
+df_width
+```
+
+
+
+
+
+### Coverage Plots
+
+
+```{r}
+# Rename estimator types for readability
+df <- df_freq
+colnames(df)[3] <- 'Methods'
+df <- df %>% mutate(Methods = str_replace(Methods, "freq_fix", "Debias-M-boot"))
+df <- df %>% mutate(Methods = str_replace(Methods, "freq_ols", "OLS-Normal"))
+df <- df %>% mutate(Methods = str_replace(Methods, "freq_plugin", "M-Normal"))
+df <- df %>% mutate(Methods = str_replace(Methods, "freq", "M-boot"))
+df_freq <- df
+df_freq
+```
+
+
+```{r}
+scale_labels <- c(
+  '1' = "G = X1",
+  '10' = "G = 10*X1",
+  '100' = "G = 100*X1"
+)
+df_freq%>%
+#%>%filter(type=='freq'|type=='freq_norm')%>%
+ggplot(aes(x =as.factor(proportion), y = freq,group=Methods,color=Methods)) +geom_line(position = position_dodge(width = 0.2))+geom_point()+coord_cartesian(ylim = c(0, 1))+geom_hline(yintercept=0.95)+ 
+  facet_wrap(~scale,scales = "free", labeller = labeller(scale = scale_labels))+theme_bw()+labs(
+       y = "Coverage", x = "Contamination Proportion (%)")  +
+  theme()
+ggsave(file="results/CI_freq_epsilon.pdf", width=8, height=3, dpi=1000)
+```
+
+
+### Width Plots
+
+```{r}
+df <- df_width
+colnames(df)[3] <- 'Methods'
+df <- df %>% mutate(Methods = str_replace(Methods, "width_fix", "Debias-M-boot"))
+df <- df %>% mutate(Methods = str_replace(Methods, "width_ols", "OLS-Normal"))
+df <- df %>% mutate(Methods = str_replace(Methods, "width_plugin", "M-Normal"))
+df <- df %>% mutate(Methods = str_replace(Methods, "width", "M-boot"))
+df_width <- df
+df_width
+```
+
+```{r}
+scale_labels <- c(
+  '1' = "G = X1",
+  '10' = "G = 10*X1",
+  '100' = "G = 100*X1"
+)
+
+df_width%>%
+#%>%filter(type=='freq'|type=='freq_norm')%>%
+ggplot(aes(x =as.factor(proportion), y = width,group=Methods,color=Methods)) +geom_line(position = position_dodge(width = 0.2))+geom_point()+coord_cartesian(ylim = c(0, 0.3))+
+  facet_wrap(~scale,scales = "free",labeller = labeller(scale = scale_labels))+theme_bw()+labs(
+       y = "Width", x = "Contamination Proportion (%)") 
+ggsave(file="results/CI_width_epsilon.pdf", width=8, height=3, dpi=1000)
+
+```
+
+
