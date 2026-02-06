@@ -87,8 +87,9 @@ This folder contains scripts for distributed inference studies, focusing on cons
 
 
 ## **Citation**
-If you use this code in your research, please cite the following manuscript:  
-Peiliang Zhang, Wen-Xin Zhou, and Zhao Ren. *Distributed Robust Estimation and Inference with Contaminated Data*, unpublished manuscript, 2025.
+If you use this code in your research, please cite the following paper:  
+Peiliang Zhang, Wen-Xin Zhou, Zhao Ren. Distributed robust estimation and inference with contaminated
+data. *Electronic Journal of Statistics, 20*(1) 261-323 2026. [Paper](https://doi.org/10.1214/26-EJS2492)
 
 
 ## **Contact**
